@@ -13,17 +13,11 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ChartOfAccountsSeeder::class,
         ]);
-    }
-    /**
-     * Seed the application's database.
-     */
-    public function run(): void
-    {
-        // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Create dummy customers
+        \App\Models\Customer::factory(3)->create();
+
+        // Create dummy suppliers
+        \App\Models\Supplier::factory(3)->create();
     }
 }
