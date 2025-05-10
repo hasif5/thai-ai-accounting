@@ -8,6 +8,12 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
+    public function run(): void
+    {
+        $this->call([
+            ChartOfAccountsSeeder::class,
+        ]);
+    }
     /**
      * Seed the application's database.
      */
