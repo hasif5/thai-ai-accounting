@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\AIInvoiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,4 +22,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('invoices', InvoiceController::class);
     Route::apiResource('purchases', PurchaseController::class);
     Route::apiResource('customers', CustomerController::class);
+    Route::post('ai/invoice', [AIInvoiceController::class, 'create']);
 });
