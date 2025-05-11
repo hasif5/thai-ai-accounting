@@ -8,7 +8,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div class="flex justify-between items-center">
                     <h1 class="text-xl font-medium text-gray-900">
-                        <slot name="header">Client Portal</slot>
+                        <slot name="header">{{ $t('client.portal') }}</slot>
                     </h1>
                     <div class="flex items-center space-x-4">
                         <slot name="header-right"></slot>
@@ -41,7 +41,7 @@
                                 'mr-3 flex-shrink-0 h-5 w-5'
                             ]"
                         />
-                        {{ item.label }}
+                        {{ $t(item.label) }}
                     </router-link>
                 </nav>
             </aside>
@@ -63,13 +63,13 @@ const route = useRoute();
 const navigation = computed(() => [
     {
         name: 'client.home',
-        label: 'Home',
+        label: 'client.home',
         to: { name: 'client.home' },
         icon: 'HomeIcon'
     },
     {
         name: 'client.invoices',
-        label: 'My Invoices',
+        label: 'invoice.invoices',
         to: { name: 'client.invoices' },
         icon: 'DocumentTextIcon'
     }

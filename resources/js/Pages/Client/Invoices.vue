@@ -1,14 +1,14 @@
 <template>
     <div>
-        <h1 class="text-2xl font-semibold text-gray-900">My Invoices</h1>
-        <p class="mt-1 text-sm text-gray-600">View and manage your invoices.</p>
+        <h1 class="text-2xl font-semibold text-gray-900">{{ $t('invoice.invoices') }}</h1>
+        <p class="mt-1 text-sm text-gray-600">{{ $t('invoice.details') }}</p>
 
         <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-md">
             <div v-if="loading" class="p-4 text-center text-gray-500">
-                Loading invoices...
+                {{ $t('common.loading') }}
             </div>
             <div v-else-if="invoices.length === 0" class="p-4 text-center text-gray-500">
-                You don't have any invoices yet.
+                {{ $t('invoice.noInvoices') }}
             </div>
             <ul v-else role="list" class="divide-y divide-gray-200">
                 <li v-for="invoice in invoices" :key="invoice.id">
@@ -17,7 +17,7 @@
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
                                     <p class="text-sm font-medium text-blue-600 truncate">
-                                        Invoice #{{ invoice.invoice_number }}
+                                        {{ $t('invoice.invoiceNumber') }} #{{ invoice.invoice_number }}
                                     </p>
                                     <div class="ml-2 flex-shrink-0 flex">
                                         <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
@@ -31,7 +31,7 @@
                                         :to="{ name: 'client.invoices.show', params: { id: invoice.id }}" 
                                         class="font-medium text-blue-600 hover:text-blue-500 mr-4"
                                     >
-                                        View
+                                        {{ $t('common.view') }}
                                     </router-link>
                                     <button 
                                         v-if="invoice.status !== 'paid'" 
@@ -39,20 +39,20 @@
                                         type="button"
                                         class="inline-flex items-center px-3 py-1 border border-transparent text-xs leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                                     >
-                                        Pay
+                                        {{ $t('invoice.pay') }}
                                     </button>
                                 </div>
                             </div>
                             <div class="mt-2 sm:flex sm:justify-between">
                                 <div class="sm:flex">
                                     <p class="flex items-center text-sm text-gray-500">
-                                        <span class="truncate">Amount: {{ formatCurrency(invoice.total) }}</span>
+                                        <span class="truncate">{{ $t('invoice.amount') }}: {{ $formatCurrency(invoice.total) }}</span>
                                     </p>
                                 </div>
                                 <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                                     <p>
-                                        Issued: {{ formatDate(invoice.issue_date) }} · 
-                                        Due: {{ formatDate(invoice.due_date) }}
+                                        {{ $t('invoice.issueDate') }}: {{ $formatDate(invoice.issue_date) }} · 
+                                        {{ $t('invoice.dueDate') }}: {{ $formatDate(invoice.due_date) }}
                                     </p>
                                 </div>
                             </div>
@@ -91,7 +91,9 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/services/api';
 import eventBus from '@/services/event-bus';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const router = useRouter();
 const loading = ref(true);
 const invoices = ref([]);
@@ -110,7 +112,7 @@ async function getInvoices(page = 1) {
         pagination.value = response.data;
     } catch (error) {
         console.error('Error loading invoices:', error);
-        eventBus.toast.error('Failed to load invoices');
+        eventBus.toast.error(t('invoice.failedToLoad'));
     } finally {
         loading.value = false;
     }
@@ -118,23 +120,6 @@ async function getInvoices(page = 1) {
 
 function payInvoice(id) {
     router.push({ name: 'client.invoices.show', params: { id } });
-}
-
-function formatCurrency(amount) {
-    if (amount === undefined || amount === null) return '฿0.00';
-    return new Intl.NumberFormat('th-TH', {
-        style: 'currency',
-        currency: 'THB'
-    }).format(amount);
-}
-
-function formatDate(dateString) {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('th-TH', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
 }
 
 function getStatusClass(status) {
@@ -153,13 +138,13 @@ function getStatusClass(status) {
 function getStatusLabel(status) {
     switch (status) {
         case 'paid':
-            return 'Paid';
+            return t('invoice.paid');
         case 'issued':
-            return 'Outstanding';
+            return t('invoice.pending');
         case 'void':
-            return 'Voided';
+            return t('invoice.cancelled');
         case 'draft':
-            return 'Draft';
+            return t('invoice.draft');
         default:
             return status;
     }

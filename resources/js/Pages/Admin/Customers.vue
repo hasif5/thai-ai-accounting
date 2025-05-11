@@ -1,12 +1,12 @@
 <template>
     <div>
         <div class="mb-8 flex justify-between items-center">
-            <h1 class="text-2xl font-semibold text-gray-900">Customers</h1>
+            <h1 class="text-2xl font-semibold text-gray-900">{{ $t('customer.customers') }}</h1>
             <button 
                 @click="openAddModal"
                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-                Add Customer
+                {{ $t('customer.addCustomer') }}
             </button>
         </div>
 
@@ -28,7 +28,7 @@
         <Modal :show="isModalOpen" @close="closeModal">
             <div class="p-6">
                 <h2 class="text-lg font-medium text-gray-900 mb-4">
-                    {{ editingCustomer ? 'Edit Customer' : 'Add New Customer' }}
+                    {{ editingCustomer ? $t('customer.editCustomer') : $t('customer.addCustomer') }}
                 </h2>
                 
                 <CustomerForm
@@ -43,21 +43,21 @@
         <Modal :show="isDeleteModalOpen" @close="isDeleteModalOpen = false">
             <div class="p-6">
                 <h2 class="text-lg font-medium text-gray-900 mb-4">
-                    Confirm Delete
+                    {{ $t('common.confirm') }}
                 </h2>
-                <p class="mb-4">Are you sure you want to delete this customer?</p>
+                <p class="mb-4">{{ $t('customer.deleteConfirm') }}</p>
                 <div class="flex justify-end">
                     <button
                         @click="isDeleteModalOpen = false"
                         class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-3"
                     >
-                        Cancel
+                        {{ $t('common.cancel') }}
                     </button>
                     <button
                         @click="deleteCustomer"
                         class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     >
-                        Delete
+                        {{ $t('common.delete') }}
                     </button>
                 </div>
             </div>
@@ -72,7 +72,9 @@ import eventBus from '@/services/event-bus';
 import CustomerTable from '@/Components/CustomerTable.vue';
 import CustomerForm from '@/Components/CustomerForm.vue';
 import Modal from '@/Components/Modal.vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const customers = ref([]);
 const pagination = ref(null);
 const loading = ref(true);
@@ -91,7 +93,7 @@ const fetchCustomers = async (page = 1) => {
         pagination.value = response.data;
     } catch (error) {
         console.error('Error fetching customers:', error);
-        eventBus.toast.error('Failed to load customers');
+        eventBus.toast.error(t('customer.failedToLoad'));
     } finally {
         loading.value = false;
     }
@@ -118,17 +120,17 @@ const saveCustomer = async (customerData) => {
     try {
         if (editingCustomer.value) {
             await api.customers.update(editingCustomer.value.id, customerData);
-            eventBus.toast.success('Customer updated successfully');
+            eventBus.toast.success(t('customer.updateSuccess'));
         } else {
             await api.customers.create(customerData);
-            eventBus.toast.success('Customer created successfully');
+            eventBus.toast.success(t('customer.createSuccess'));
         }
         
         await fetchCustomers();
         closeModal();
     } catch (error) {
         console.error('Error saving customer:', error);
-        eventBus.toast.error('Failed to save customer');
+        eventBus.toast.error(t('customer.failedToSave'));
     }
 };
 
@@ -141,12 +143,12 @@ const confirmDelete = (customer) => {
 const deleteCustomer = async () => {
     try {
         await api.customers.delete(customerToDelete.value.id);
-        eventBus.toast.success('Customer deleted successfully');
+        eventBus.toast.success(t('customer.deleteSuccess'));
         await fetchCustomers();
         isDeleteModalOpen.value = false;
     } catch (error) {
         console.error('Error deleting customer:', error);
-        eventBus.toast.error('Failed to delete customer');
+        eventBus.toast.error(t('customer.failedToDelete'));
     }
 };
 

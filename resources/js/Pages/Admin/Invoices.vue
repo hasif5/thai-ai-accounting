@@ -1,19 +1,19 @@
 <template>
     <div>
         <div class="mb-8 flex justify-between items-center">
-            <h1 class="text-2xl font-semibold text-gray-900">Invoices</h1>
+            <h1 class="text-2xl font-semibold text-gray-900">{{ $t('invoice.invoices') }}</h1>
             <div>
                 <button 
                     @click="openAIModal"
                     class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mr-3"
                 >
-                    AI สร้างใบแจ้งหนี้
+                    {{ $t('invoice.aiGenerate') }}
                 </button>
                 <button 
                     @click="openAddModal"
                     class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                    Add Invoice
+                    {{ $t('invoice.addInvoice') }}
                 </button>
             </div>
         </div>
@@ -36,7 +36,7 @@
         <Modal :show="isModalOpen" @close="closeModal">
             <div class="p-6">
                 <h2 class="text-lg font-medium text-gray-900 mb-4">
-                    {{ editingInvoice ? 'Edit Invoice' : 'Add New Invoice' }}
+                    {{ editingInvoice ? $t('invoice.editInvoice') : $t('invoice.addInvoice') }}
                 </h2>
                 
                 <InvoiceForm
@@ -51,12 +51,12 @@
         <Modal :show="isAIModalOpen" @close="closeAIModal">
             <div class="p-6">
                 <h2 class="text-lg font-medium text-gray-900 mb-4">
-                    AI สร้างใบแจ้งหนี้
+                    {{ $t('invoice.aiGenerate') }}
                 </h2>
                 
                 <form @submit.prevent="generateAIInvoice" class="space-y-4">
                     <div>
-                        <label for="description" class="block text-sm font-medium text-gray-700">รายละเอียด (ภาษาไทย)</label>
+                        <label for="description" class="block text-sm font-medium text-gray-700">{{ $t('invoice.description') }} (ภาษาไทย)</label>
                         <textarea
                             id="description"
                             v-model="aiDescription"
@@ -73,14 +73,14 @@
                             @click="closeAIModal"
                             class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-3"
                         >
-                            Cancel
+                            {{ $t('common.cancel') }}
                         </button>
                         <button
                             type="submit"
                             class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                             :disabled="aiLoading"
                         >
-                            {{ aiLoading ? 'กำลังสร้าง...' : 'สร้างใบแจ้งหนี้' }}
+                            {{ aiLoading ? $t('common.loading') : $t('invoice.aiGenerate') }}
                         </button>
                     </div>
                 </form>
@@ -91,21 +91,21 @@
         <Modal :show="isDeleteModalOpen" @close="isDeleteModalOpen = false">
             <div class="p-6">
                 <h2 class="text-lg font-medium text-gray-900 mb-4">
-                    Confirm Delete
+                    {{ $t('common.confirm') }}
                 </h2>
-                <p class="mb-4">Are you sure you want to delete this invoice?</p>
+                <p class="mb-4">{{ $t('invoice.deleteConfirm') }}</p>
                 <div class="flex justify-end">
                     <button
                         @click="isDeleteModalOpen = false"
                         class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-3"
                     >
-                        Cancel
+                        {{ $t('common.cancel') }}
                     </button>
                     <button
                         @click="deleteInvoice"
                         class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     >
-                        Delete
+                        {{ $t('common.delete') }}
                     </button>
                 </div>
             </div>
@@ -120,7 +120,9 @@ import eventBus from '@/services/event-bus';
 import InvoiceTable from '@/Components/InvoiceTable.vue';
 import InvoiceForm from '@/Components/InvoiceForm.vue';
 import Modal from '@/Components/Modal.vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const invoices = ref([]);
 const pagination = ref(null);
 const loading = ref(true);
@@ -142,7 +144,7 @@ const fetchInvoices = async (page = 1) => {
         pagination.value = response.data;
     } catch (error) {
         console.error('Error fetching invoices:', error);
-        eventBus.toast.error('Failed to load invoices');
+        eventBus.toast.error(t('invoice.failedToLoad'));
     } finally {
         loading.value = false;
     }
@@ -182,10 +184,10 @@ const generateAIInvoice = async () => {
         
         await fetchInvoices();
         closeAIModal();
-        eventBus.toast.success('Invoice created successfully!');
+        eventBus.toast.success(t('invoice.createSuccess'));
     } catch (error) {
         console.error('Error generating AI invoice:', error);
-        eventBus.toast.error('Failed to generate invoice: ' + (error.response?.data?.error || error.message));
+        eventBus.toast.error(t('invoice.failedToSave') + ': ' + (error.response?.data?.error || error.message));
     } finally {
         aiLoading.value = false;
     }
@@ -196,17 +198,17 @@ const saveInvoice = async (invoiceData) => {
     try {
         if (editingInvoice.value) {
             await api.invoices.update(editingInvoice.value.id, invoiceData);
-            eventBus.toast.success('Invoice updated successfully');
+            eventBus.toast.success(t('invoice.updateSuccess'));
         } else {
             await api.invoices.create(invoiceData);
-            eventBus.toast.success('Invoice created successfully');
+            eventBus.toast.success(t('invoice.createSuccess'));
         }
         
         await fetchInvoices();
         closeModal();
     } catch (error) {
         console.error('Error saving invoice:', error);
-        eventBus.toast.error('Failed to save invoice');
+        eventBus.toast.error(t('invoice.failedToSave'));
     }
 };
 
@@ -219,12 +221,12 @@ const confirmDelete = (invoice) => {
 const deleteInvoice = async () => {
     try {
         await api.invoices.delete(invoiceToDelete.value.id);
-        eventBus.toast.success('Invoice deleted successfully');
+        eventBus.toast.success(t('invoice.deleteSuccess'));
         await fetchInvoices();
         isDeleteModalOpen.value = false;
     } catch (error) {
         console.error('Error deleting invoice:', error);
-        eventBus.toast.error('Failed to delete invoice');
+        eventBus.toast.error(t('invoice.failedToDelete'));
     }
 };
 
