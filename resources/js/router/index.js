@@ -35,6 +35,16 @@ const router = createRouter({
             ]
         },
         {
+            path: '/client/login',
+            name: 'client.login',
+            component: () => import('@/Pages/Client/Auth/Login.vue')
+        },
+        {
+            path: '/client/register',
+            name: 'client.register',
+            component: () => import('@/Pages/Client/Auth/Register.vue')
+        },
+        {
             path: '/client',
             component: () => import('@/Layouts/ClientLayout.vue'),
             children: [
@@ -47,6 +57,12 @@ const router = createRouter({
                     path: 'invoices',
                     name: 'client.invoices',
                     component: () => import('@/Pages/Client/Invoices.vue')
+                },
+                {
+                    path: 'invoices/:id',
+                    name: 'client.invoices.show',
+                    component: () => import('@/Pages/Client/InvoiceShow.vue'),
+                    props: true
                 }
             ]
         }
