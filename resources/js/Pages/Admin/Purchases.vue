@@ -67,7 +67,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/services/api';
+import eventBus from '@/services/event-bus';
 import PurchaseTable from '@/Components/PurchaseTable.vue';
 import PurchaseForm from '@/Components/PurchaseForm.vue';
 import Modal from '@/Components/Modal.vue';
@@ -84,13 +85,13 @@ const purchaseToDelete = ref(null);
 const fetchPurchases = async (page = 1) => {
     loading.value = true;
     try {
-        const response = await axios.get(`/api/purchases?page=${page}`);
+        const response = await api.purchases.getAll(page);
         purchases.value = response.data.data;
         delete response.data.data;
         pagination.value = response.data;
     } catch (error) {
         console.error('Error fetching purchases:', error);
-        alert('Failed to load purchases');
+        eventBus.toast.error('Failed to load purchases');
     } finally {
         loading.value = false;
     }
@@ -116,16 +117,18 @@ const closeModal = () => {
 const savePurchase = async (purchaseData) => {
     try {
         if (editingPurchase.value) {
-            await axios.put(`/api/purchases/${editingPurchase.value.id}`, purchaseData);
+            await api.purchases.update(editingPurchase.value.id, purchaseData);
+            eventBus.toast.success('Purchase updated successfully');
         } else {
-            await axios.post('/api/purchases', purchaseData);
+            await api.purchases.create(purchaseData);
+            eventBus.toast.success('Purchase created successfully');
         }
         
         await fetchPurchases();
         closeModal();
     } catch (error) {
         console.error('Error saving purchase:', error);
-        alert('Failed to save purchase');
+        eventBus.toast.error('Failed to save purchase');
     }
 };
 
@@ -137,12 +140,13 @@ const confirmDelete = (purchase) => {
 
 const deletePurchase = async () => {
     try {
-        await axios.delete(`/api/purchases/${purchaseToDelete.value.id}`);
+        await api.purchases.delete(purchaseToDelete.value.id);
+        eventBus.toast.success('Purchase deleted successfully');
         await fetchPurchases();
         isDeleteModalOpen.value = false;
     } catch (error) {
         console.error('Error deleting purchase:', error);
-        alert('Failed to delete purchase');
+        eventBus.toast.error('Failed to delete purchase');
     }
 };
 

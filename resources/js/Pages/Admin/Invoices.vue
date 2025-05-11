@@ -115,7 +115,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/services/api';
+import eventBus from '@/services/event-bus';
 import InvoiceTable from '@/Components/InvoiceTable.vue';
 import InvoiceForm from '@/Components/InvoiceForm.vue';
 import Modal from '@/Components/Modal.vue';
@@ -135,13 +136,13 @@ const aiLoading = ref(false);
 const fetchInvoices = async (page = 1) => {
     loading.value = true;
     try {
-        const response = await axios.get(`/api/invoices?page=${page}`);
+        const response = await api.invoices.getAll(page);
         invoices.value = response.data.data;
         delete response.data.data;
         pagination.value = response.data;
     } catch (error) {
         console.error('Error fetching invoices:', error);
-        alert('Failed to load invoices');
+        eventBus.toast.error('Failed to load invoices');
     } finally {
         loading.value = false;
     }
@@ -177,16 +178,14 @@ const closeAIModal = () => {
 const generateAIInvoice = async () => {
     aiLoading.value = true;
     try {
-        const response = await axios.post('/api/ai/invoice', {
-            description: aiDescription.value
-        });
+        await api.invoices.generateWithAI(aiDescription.value);
         
         await fetchInvoices();
         closeAIModal();
-        alert('Invoice created successfully!');
+        eventBus.toast.success('Invoice created successfully!');
     } catch (error) {
         console.error('Error generating AI invoice:', error);
-        alert('Failed to generate invoice: ' + (error.response?.data?.error || error.message));
+        eventBus.toast.error('Failed to generate invoice: ' + (error.response?.data?.error || error.message));
     } finally {
         aiLoading.value = false;
     }
@@ -196,16 +195,18 @@ const generateAIInvoice = async () => {
 const saveInvoice = async (invoiceData) => {
     try {
         if (editingInvoice.value) {
-            await axios.put(`/api/invoices/${editingInvoice.value.id}`, invoiceData);
+            await api.invoices.update(editingInvoice.value.id, invoiceData);
+            eventBus.toast.success('Invoice updated successfully');
         } else {
-            await axios.post('/api/invoices', invoiceData);
+            await api.invoices.create(invoiceData);
+            eventBus.toast.success('Invoice created successfully');
         }
         
         await fetchInvoices();
         closeModal();
     } catch (error) {
         console.error('Error saving invoice:', error);
-        alert('Failed to save invoice');
+        eventBus.toast.error('Failed to save invoice');
     }
 };
 
@@ -217,12 +218,13 @@ const confirmDelete = (invoice) => {
 
 const deleteInvoice = async () => {
     try {
-        await axios.delete(`/api/invoices/${invoiceToDelete.value.id}`);
+        await api.invoices.delete(invoiceToDelete.value.id);
+        eventBus.toast.success('Invoice deleted successfully');
         await fetchInvoices();
         isDeleteModalOpen.value = false;
     } catch (error) {
         console.error('Error deleting invoice:', error);
-        alert('Failed to delete invoice');
+        eventBus.toast.error('Failed to delete invoice');
     }
 };
 

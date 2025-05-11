@@ -89,6 +89,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import api from '@/services/api';
+import eventBus from '@/services/event-bus';
 
 const router = useRouter();
 const loading = ref(true);
@@ -102,25 +104,13 @@ onMounted(() => {
 async function getInvoices(page = 1) {
     loading.value = true;
     try {
-        const response = await fetch(`/api/client/invoices?page=${page}`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Authorization': `Bearer ${localStorage.getItem('client_token')}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to load invoices');
-        }
-
-        const data = await response.json();
-        invoices.value = data.data;
-        delete data.data;
-        pagination.value = data;
+        const response = await api.client.invoices.getAll(page);
+        invoices.value = response.data.data;
+        delete response.data.data;
+        pagination.value = response.data;
     } catch (error) {
         console.error('Error loading invoices:', error);
+        eventBus.toast.error('Failed to load invoices');
     } finally {
         loading.value = false;
     }

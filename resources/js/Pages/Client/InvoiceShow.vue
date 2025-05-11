@@ -158,6 +158,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import api from '@/services/api';
+import eventBus from '@/services/event-bus';
 
 const route = useRoute();
 const loading = ref(true);
@@ -177,23 +179,12 @@ onMounted(async () => {
 async function getInvoice() {
     loading.value = true;
     try {
-        const response = await fetch(`/api/client/invoices/${route.params.id}`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Authorization': `Bearer ${localStorage.getItem('client_token')}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to load invoice details');
-        }
-
-        invoice.value = await response.json();
+        const response = await api.client.invoices.get(route.params.id);
+        invoice.value = response.data;
     } catch (err) {
         error.value = err.message || 'An error occurred while loading the invoice';
         console.error('Error loading invoice:', err);
+        eventBus.toast.error('Failed to load invoice details');
     } finally {
         loading.value = false;
     }
@@ -201,31 +192,23 @@ async function getInvoice() {
 
 async function getPaymentQR() {
     try {
-        const response = await fetch(`/api/client/invoices/${route.params.id}/payment`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Authorization': `Bearer ${localStorage.getItem('client_token')}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to generate payment QR code');
-        }
-
-        const data = await response.json();
-        qrCode.value = data.qr_image_url;
+        const response = await api.client.invoices.getPaymentQR(route.params.id);
+        qrCode.value = response.data.qr_image_url;
     } catch (err) {
         qrError.value = err.message || 'An error occurred while generating the payment QR';
         console.error('Error getting payment QR:', err);
+        eventBus.toast.error('Failed to generate payment QR code');
     }
 }
 
 async function refreshPaymentStatus() {
+    eventBus.toast.info('Checking payment status...');
     await getInvoice();
     
-    if (invoice.value && invoice.value.status !== 'paid') {
+    if (invoice.value && invoice.value.status === 'paid') {
+        eventBus.toast.success('Payment confirmed!');
+    } else if (invoice.value && invoice.value.status !== 'paid') {
+        eventBus.toast.info('Payment not yet confirmed. Please try again later.');
         await getPaymentQR();
     }
 }

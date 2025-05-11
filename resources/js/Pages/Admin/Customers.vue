@@ -67,7 +67,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/services/api';
+import eventBus from '@/services/event-bus';
 import CustomerTable from '@/Components/CustomerTable.vue';
 import CustomerForm from '@/Components/CustomerForm.vue';
 import Modal from '@/Components/Modal.vue';
@@ -84,13 +85,13 @@ const customerToDelete = ref(null);
 const fetchCustomers = async (page = 1) => {
     loading.value = true;
     try {
-        const response = await axios.get(`/api/customers?page=${page}`);
+        const response = await api.customers.getAll(page);
         customers.value = response.data.data;
         delete response.data.data;
         pagination.value = response.data;
     } catch (error) {
         console.error('Error fetching customers:', error);
-        alert('Failed to load customers');
+        eventBus.toast.error('Failed to load customers');
     } finally {
         loading.value = false;
     }
@@ -116,16 +117,18 @@ const closeModal = () => {
 const saveCustomer = async (customerData) => {
     try {
         if (editingCustomer.value) {
-            await axios.put(`/api/customers/${editingCustomer.value.id}`, customerData);
+            await api.customers.update(editingCustomer.value.id, customerData);
+            eventBus.toast.success('Customer updated successfully');
         } else {
-            await axios.post('/api/customers', customerData);
+            await api.customers.create(customerData);
+            eventBus.toast.success('Customer created successfully');
         }
         
         await fetchCustomers();
         closeModal();
     } catch (error) {
         console.error('Error saving customer:', error);
-        alert('Failed to save customer');
+        eventBus.toast.error('Failed to save customer');
     }
 };
 
@@ -137,12 +140,13 @@ const confirmDelete = (customer) => {
 
 const deleteCustomer = async () => {
     try {
-        await axios.delete(`/api/customers/${customerToDelete.value.id}`);
+        await api.customers.delete(customerToDelete.value.id);
+        eventBus.toast.success('Customer deleted successfully');
         await fetchCustomers();
         isDeleteModalOpen.value = false;
     } catch (error) {
         console.error('Error deleting customer:', error);
-        alert('Failed to delete customer');
+        eventBus.toast.error('Failed to delete customer');
     }
 };
 
