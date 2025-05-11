@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class MakeAIInvoiceCommand extends Command
 {
-    protected $signature = 'make:ai-invoice {description : The Thai description of the invoice}'
+    protected $signature = 'make:ai-invoice {description : The Thai description of the invoice}';
     protected $description = 'Generate an invoice from a Thai language description using AI';
 
     public function handle(AssistantService $assistant)
