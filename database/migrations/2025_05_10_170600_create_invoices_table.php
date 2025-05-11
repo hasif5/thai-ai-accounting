@@ -20,6 +20,7 @@ return new class extends Migration
             $table->decimal('tax', 15, 2);
             $table->decimal('total', 15, 2);
             $table->text('notes')->nullable();
+            $table->string('xml_path')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
